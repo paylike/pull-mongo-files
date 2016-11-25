@@ -1,0 +1,21 @@
+{
+	"name": "pull-mongo-files",
+	"description": "Read and write files from MongoDb's GridFS using pull-streams",
+	"version": "1.0.0",
+	"repository": "paylike/pull-mongo-files",
+	"scripts": {
+		"test": "node test"
+	},
+	"dependencies": {
+		"bluebird": "^3.4.6",
+		"stream-to-pull-stream": "^1.7.2"
+	},
+	"devDependencies": {
+		"mongo-uuid": "^1.4.7",
+		"mongodb": "^2.2.11",
+		"pull-stream": "^3.5.0",
+		"pull-to-promise": "^0.0.2",
+		"tape": "^4.6.3"
+	},
+	"license": "MIT"
+}
