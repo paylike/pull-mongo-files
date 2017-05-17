@@ -1,14 +1,14 @@
 'use strict';
 
-var Promise = require('bluebird');
-var nodeToPull = require('stream-to-pull-stream');
+const Promise = require('bluebird');
+const toPull = require('stream-to-pull-stream');
 
 module.exports = fs;
 
 function fs( mongodb, db, options ){
-	var bucket = Promise.resolve(db).then(function( db ){
-		return new mongodb.GridFSBucket(db, options);
-	});
+	const bucket = Promise.resolve(db).then(
+		db => new mongodb.GridFSBucket(db, options)
+	);
 
 	return {
 		write: write,
@@ -18,68 +18,55 @@ function fs( mongodb, db, options ){
 	};
 
 	function write( id, meta ){
-		meta = meta || {};
+		if (meta === undefined)
+			meta = {};
 
 		return function( read ){
-			var file = bucket
-				.call('openUploadStreamWithId', id, meta.name, {
+			return bucket.then(function( bucket ){
+				const stream = bucket.openUploadStreamWithId(id, meta.name, {
 					metadata: meta,
 					contentType: meta.type,
 				});
 
-			return Promise.fromCallback(function( cb ){
-				Promise
-					.join(file, cb, nodeToPull.sink)
-					.then(function( sink ){
-						sink(read);
-					});
+				return new Promise(function( rs, rj ){
+					toPull.sink(stream,
+						err => err ? rj(err) : rs()
+					)(read);
+				});
 			});
 		}
 	}
 
 	function read( id ){
-		var stream;
+		const stream;
 
 		return function drain( end, cb ){
-			if (stream)
-				return stream.then(function( stream ){
-					return stream(end, cb);
-				});
+			if (stream !== undefined)
+				return stream.then(stream => stream(end, cb));
 
-			if (end)
+			if (end !== null)
 				return cb && cb(end);
 
-			stream = bucket
-				.call('openDownloadStream', id)
-				.then(nodeToPull.source);
+			stream = bucket.then(
+				bucket => toPull.source(bucket.openDownloadStream(id))
+			);
 
 			return drain(null, cb);
 		}
 	}
 
 	function stat( id ){
-		return bucket
-			.call('find', {
-				_id: id,
-			}, {
-				limit: 1,
-			})
-			.call('next')
-			.then(function( file ){
-				if (!file)
-					return null;
-
-				return {
-					id: file._id,
-					meta: file.metadata,
-				};
-			});
+		return bucket.then(bucket => bucket.find({
+			_id: id,
+		}, {
+			limit: 1,
+		}).next()).then(file => file === null ? null : {
+			id: file._id,
+			meta: file.metadata,
+		});
 	}
 
 	function exists( id ){
-		return stat(id)
-			.then(function( stat ){
-				return stat !== null;
-			});
+		return stat(id).then(stat => stat !== null);
 	}
 }
