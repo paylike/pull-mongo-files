@@ -57,10 +57,6 @@ pull(
 );
 ```
 
-If there's a chance the file might not exist, you should probably guard it by
-`exists` or catch the error.
-
-
 ### Meta data
 
 Use `write` to write any meta data and `stat` to read it.
