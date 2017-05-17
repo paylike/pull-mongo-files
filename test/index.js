@@ -46,6 +46,42 @@ test('Write', function( t ){
 			.tap(file => t.ok(file));
 	});
 
+
+	// Currently emits a warning from the "stream-to-pull-stream" module
+	// because the MongoDB GridFS write stream does not implement a "destroy"
+	// method.
+	//
+	// https://github.com/pull-stream/stream-to-pull-stream/blob/master/index.js#L21-L25
+	// https://github.com/mongodb/node-mongodb-native/pull/1339
+
+	t.test('Aborting', function( t ){
+		t.plan(2);
+
+		var id = ObjectId();
+
+		var count = 0;
+
+		var write = pull(
+			function( end, cb ){
+				if (end !== null)
+					return cb(end);
+
+				if (count++ < 5)
+					return cb(null, new Buffer('00', 'hex'));	// write a byte
+
+				cb(new DummyError());
+			},
+			mfs.write(id)
+		)
+			.catch(err => t.ok(err));
+
+		Promise
+			.join(id, write)
+			.spread(mfs.read)
+			.then(pullToPromise)
+			.catch(err => t.ok(err.message.includes('FileNotFound')));
+	});
+
 	t.test('With meta data', function( t ){
 		t.plan(2);
 
@@ -222,3 +258,7 @@ test('Using UUIDs', function( t ){
 			.tap(exists => t.equal(exists, false));
 	});
 });
+
+function DummyError(){}
+
+DummyError.prototype = Object.create(Error.prototype);
