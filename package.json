@@ -11,7 +11,7 @@
 		"stream-to-pull-stream": "^1.7.2"
 	},
 	"devDependencies": {
-		"mongo-uuid": "^1.4.7",
+		"mongo-uuid": "^0.0.4",
 		"mongodb": "^2.2.11",
 		"pull-stream": "^3.5.0",
 		"pull-to-promise": "^0.0.2",
