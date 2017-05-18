@@ -4,13 +4,16 @@
 	"version": "1.0.0",
 	"repository": "paylike/pull-mongo-files",
 	"scripts": {
-		"test": "node test"
+		"test:mongod:start": "mongod --port=$MONGODB_PORT --dbpath $(mktemp -d) --fork --pidfilepath=\"$(pwd)/.mongodpid\" --logpath /dev/null",
+		"test:mongod:stop": "pidfile=\"$(pwd)/.mongodpid\" && kill $(cat \"$pidfile\") && rm \"$pidfile\"",
+		"test": "export MONGODB_PORT=$(get-port); npm run test:mongod:start && node test; npm run test:mongod:stop"
 	},
 	"dependencies": {
 		"bluebird": "^3.5.0",
 		"stream-to-pull-stream": "^1.7.2"
 	},
 	"devDependencies": {
+		"get-port-cli": "^1.1.0",
 		"mongo-uuid": "^0.0.4",
 		"mongodb": "^2.2.26",
 		"pull-stream": "^3.6.0",

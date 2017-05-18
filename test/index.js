@@ -9,7 +9,7 @@ var pull = require('pull-stream');
 var pullToPromise = require('pull-to-promise');
 var uuid = require('mongo-uuid');
 
-var db = mongodb.connect('mongodb://localhost/pull_mongo_files_test', {
+var db = mongodb.connect('mongodb://localhost:'+process.env.MONGODB_PORT+'/pull_mongo_files_test', {
 	promiseLibrary: Promise,
 });
 
