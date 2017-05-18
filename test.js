@@ -5,7 +5,7 @@ var Promise = require('bluebird');
 var test = require('tape');
 var mongodb = require('mongodb');
 var nodeToPull = require('stream-to-pull-stream');
-var pull = require('pull-stream');
+var { pull, values, collect } = require('pull-stream');
 var pullToPromise = require('pull-to-promise');
 var uuid = require('mongo-uuid');
 
@@ -13,13 +13,14 @@ var db = mongodb.connect('mongodb://localhost:'+process.env.MONGODB_PORT+'/pull_
 	promiseLibrary: Promise,
 });
 
-var mfs = require('../')(mongodb, db);
+var mfs = require('./')(mongodb, db);
 
 var ObjectId = mongodb.ObjectId;
 
-var wallpaper = __dirname+'/fixtures/wallpaper.jpg';
+var nonceChunks = [ '47', '61', '72', '66', '69', '65', '6c', '64' ]
+	.map(nc => Buffer.from(nc, 'hex'));
 
-var wallpaperAsBuffer = fs.readFileSync(wallpaper);
+var nonce = Buffer.concat(nonceChunks);
 
 test.onFinish(function(){
 	db
@@ -35,7 +36,7 @@ test('Write', function( t ){
 		var id = ObjectId();
 
 		var write = pull(
-			nodeToPull.source(fs.createReadStream(wallpaper)),
+			values(nonceChunks),
 			mfs.write(id)
 		)
 			.then(err => t.notOk(err));
@@ -88,7 +89,7 @@ test('Write', function( t ){
 		var id = ObjectId();
 
 		var write = pull(
-			nodeToPull.source(fs.createReadStream(wallpaper)),
+			values(nonceChunks),
 			mfs.write(id, {
 				name: 'wallpaper.jpg',
 				created: new Date(),
@@ -107,26 +108,28 @@ test('Read', function( t ){
 	var id = ObjectId();
 
 	var write = pull(
-		nodeToPull.source(fs.createReadStream(wallpaper)),
+		values(nonceChunks),
 		mfs.write(id)
 	);
 
 	t.test(function( t ){
 		t.plan(1);
 
-		Promise
-			.join(id, write)
-			.spread(mfs.read)
-			.then(chunks => pullToPromise(chunks, true))
-			.then(Buffer.concat)
-			.tap(downloaded => t.ok(downloaded.equals(wallpaperAsBuffer)));
+		write.then(() => pull(
+			mfs.read(id),
+			collect(( err, cs ) => err
+				? console.error(err)
+				: t.ok(Buffer.concat(cs).equals(nonce))
+			)
+		));
 	});
 
 	t.test('Not found', function( t ){
 		t.plan(1);
 
-		pullToPromise(mfs.read(ObjectId()))
-			.catch(err => t.ok(err.message.includes('FileNotFound')));
+		pull(mfs.read(ObjectId()),
+			collect(err => t.ok(err.message.includes('FileNotFound')))
+		);
 	});
 });
 
@@ -134,7 +137,7 @@ test('Stat', function( t ){
 	var id = ObjectId();
 
 	var write = pull(
-		nodeToPull.source(fs.createReadStream(wallpaper)),
+		values(nonceChunks),
 		mfs.write(id)
 	);
 
@@ -159,7 +162,7 @@ test('Stat', function( t ){
 		var created = new Date();
 
 		var write = pull(
-			nodeToPull.source(fs.createReadStream(wallpaper)),
+			values(nonceChunks),
 			mfs.write(id, {
 				name,
 				created,
@@ -189,7 +192,7 @@ test('Exists', function( t ){
 	var id = ObjectId();
 
 	var write = pull(
-		nodeToPull.source(fs.createReadStream(wallpaper)),
+		values(nonceChunks),
 		mfs.write(id)
 	);
 
@@ -213,7 +216,7 @@ test('Using UUIDs', function( t ){
 	var id = uuid();
 
 	var write = pull(
-		nodeToPull.source(fs.createReadStream(wallpaper)),
+		values(nonceChunks),
 		mfs.write(id)
 	);
 
@@ -226,12 +229,13 @@ test('Using UUIDs', function( t ){
 	t.test('Read', function( t ){
 		t.plan(1);
 
-		Promise
-			.join(id, write)
-			.spread(mfs.read)
-			.then(chunks => pullToPromise(chunks, true))
-			.then(Buffer.concat)
-			.tap(downloaded => t.ok(downloaded.equals(wallpaperAsBuffer)));
+		write.then(() => pull(
+			mfs.read(id),
+			collect(( err, chunks ) => err
+				? console.error(err)
+				: t.ok(Buffer.concat(chunks).equals(nonce))
+			)
+		));
 	});
 
 	t.test('Stat', function( t ){
