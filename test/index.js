@@ -67,7 +67,7 @@ test('Write', function( t ){
 					return cb(end);
 
 				if (count++ < 5)
-					return cb(null, new Buffer('00', 'hex'));	// write a byte
+					return cb(null, Buffer.from('00', 'hex'));	// write a byte
 
 				cb(new DummyError());
 			},
