@@ -1,7 +1,7 @@
 {
 	"name": "pull-mongo-files",
 	"description": "Read and write files from MongoDb's GridFS using pull-streams",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"repository": "paylike/pull-mongo-files",
 	"scripts": {
 		"test:mongod:start": "mongod --port=$MONGODB_PORT --dbpath $(mktemp -d) --fork --pidfilepath=\"$(pwd)/.mongodpid\" --logpath /dev/null",
