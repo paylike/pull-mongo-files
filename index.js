@@ -38,7 +38,7 @@ function fs( mongodb, db, options ){
 	}
 
 	function read( id ){
-		const stream;
+		let stream;
 
 		return function drain( end, cb ){
 			if (stream !== undefined)
