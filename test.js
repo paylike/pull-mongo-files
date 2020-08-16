@@ -7,11 +7,18 @@ var mongodb = require('mongodb');
 var nodeToPull = require('stream-to-pull-stream');
 var { pull, values, collect } = require('pull-stream');
 var pullToPromise = require('pull-to-promise');
-var uuid = require('mongo-uuid');
+var muuid = require('mongo-uuid');
 
-var db = mongodb.connect('mongodb://localhost:'+process.env.MONGODB_PORT+'/pull_mongo_files_test', {
+const uuid = i => muuid(mongodb.Binary, i)
+
+pullToPromise.Promise = Promise
+
+var client = mongodb.connect('mongodb://localhost:'+process.env.MONGODB_PORT+'/pull_mongo_files_test', {
 	promiseLibrary: Promise,
+	useNewUrlParser: true,
+	useUnifiedTopology: true,
 });
+var db = client.then(c => c.db());
 
 var mfs = require('./')(mongodb, db);
 
@@ -25,7 +32,7 @@ var nonce = Buffer.concat(nonceChunks);
 test.onFinish(function(){
 	db
 		.call('dropDatabase')
-		.return(db)
+		.return(client)
 		.call('close');
 });
 
