@@ -28,6 +28,17 @@ function fs( mongodb, db, options ){
 					contentType: meta.type,
 				});
 
+				/*
+				A terrible hack with unknown consequences due to
+				https://jira.mongodb.org/browse/NODE-2355
+				*/
+				stream.destroy = function(err, cb) {
+					if (typeof cb === 'function') {
+						cb(err);
+					}
+					return this;
+				}
+
 				return new Promise(function( rs, rj ){
 					toPull.sink(stream,
 						err => err ? rj(err) : rs()

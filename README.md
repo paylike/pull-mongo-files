@@ -1,5 +1,9 @@
 # pull-mongo-files
 
+Warning: this version includes a hack (see the source) to work around [an
+issue in the mongodb client](https://jira.mongodb.org/browse/NODE-2355)
+apparent when using Node.js v13+.
+
 Read and write files from MongoDb's GridFS using
 [pull-streams](https://github.com/pull-stream/pull-stream).
 
