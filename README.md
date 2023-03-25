@@ -1,9 +1,5 @@
 # pull-mongo-files
 
-Warning: this version includes a hack (see the source) to work around
-[an issue in the mongodb client](https://jira.mongodb.org/browse/NODE-2355)
-apparent when using Node.js v13+.
-
 Read and write files from MongoDb's GridFS using
 [pull-streams](https://github.com/pull-stream/pull-stream).
 
@@ -21,11 +17,9 @@ npm install pull-mongo-files
 ```
 
 ```js
-var mongodb = require('mongodb')
-
-var db = mongodb.connect('mongodb://localhost/test')
-
-var files = require('pull-mongo-files')(mongodb, db)
+const {GridFSBucket, MongoClient} = require('mongodb')
+const client = new MongoClient('mongodb://localhost:27017/myproject')
+const files = require('pull-mongo-files')(GridFSBucket, client.db())
 ```
 
 ## Examples
@@ -33,24 +27,24 @@ var files = require('pull-mongo-files')(mongodb, db)
 ### Write
 
 ```js
-var fs = require('fs');
-var pull = require('pull-stream');
-var toPull = require('stream-to-pull-stream');
+const fs = require('node:fs')
+const pull = require('pull-stream')
+const toPull = require('stream-to-pull-stream')
 
 pull(
 	toPull.source(fs.createReadStream('my_image.jpg'), {
 		name: 'image.jpg',
 		type:
 	}),
-	files.write(mongodb.ObjectId())
+	files.write(ObjectId())
 )
 ```
 
 ### Read
 
 ```js
-var pull = require('pull-stream')
-var toPull = require('stream-to-pull-stream')
+const pull = require('pull-stream')
+const toPull = require('stream-to-pull-stream')
 
 pull(files.read(id), toPull.sink(res))
 ```
@@ -66,7 +60,7 @@ status in other MongoDb GridFS implementations.
 ### Using UUIDs
 
 ```js
-var uuid = require('mongo-uuid')
+const uuid = require('mongo-uuid')
 
 files.write(uuid())
 ```

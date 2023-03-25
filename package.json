@@ -9,16 +9,17 @@
 		"test": "export MONGODB_PORT=$(get-port); npm run test:mongod:start && node test; npm run test:mongod:stop"
 	},
 	"dependencies": {
-		"bluebird": "^3.7.2",
 		"stream-to-pull-stream": "^1.7.3"
 	},
 	"devDependencies": {
-		"get-port-cli": "^2.0.0",
-		"mongo-uuid": "^1.1.0",
-		"mongodb": "^3.6.0",
-		"pull-stream": "^3.6.0",
-		"pull-to-promise": "^1.0.1",
-		"tape": "^5.0.1"
+		"get-port-cli": "^3.0.0",
+		"mongo-uuid": "^2.0.0",
+		"mongodb": "^5.1.0",
+		"psjoin": "^1.0.0",
+		"psp-collect": "^1.0.1",
+		"psp-drain": "^1.0.1",
+		"pull-stream": "^3.7.0",
+		"tape": "^5.6.3"
 	},
 	"license": "MIT"
 }
