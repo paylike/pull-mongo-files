@@ -36,7 +36,7 @@ pull(
 		name: 'image.jpg',
 		type:
 	}),
-	files.write(ObjectId())
+	files.write(new ObjectId())
 )
 ```
 
